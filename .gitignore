@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Generated/Temp Files
+schema_output*.json
+Yeni Metin Belgesi.txt
+
+# OS
+.DS_Store
+Thumbs.db
