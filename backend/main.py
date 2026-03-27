@@ -9,7 +9,8 @@ from logic import (
     get_all_suppliers, save_full_invoice, get_all_accounts, save_transaction,
     get_all_recipes, delete_recipe, get_all_sales, get_all_invoices,
     update_ingredient, delete_ingredient, create_ingredient, update_supplier, delete_supplier, add_supplier,
-    get_invoice_full_data, update_full_invoice, delete_invoice
+    update_ingredient, delete_ingredient, create_ingredient, update_supplier, delete_supplier, add_supplier,
+    get_invoice_full_data, update_full_invoice, delete_invoice, update_menu_item_recipe
 )
 from database import supabase
 from typing import List, Dict, Any
@@ -157,6 +158,19 @@ def get_recipe_cost(menu_item_id: int):
 def remove_recipe(recipe_id: str):
     delete_recipe(recipe_id)
     return {"message": "Deleted"}
+
+@app.put("/recipes/{recipe_id}")
+def edit_recipe(recipe_id: int, payload: Dict[str, Any] = Body(...)):
+    """
+    Updates basic info and ingredients list for a recipe.
+    Payload expected:
+    {
+      "menu_data": { "name": "...", "price": ..., "category": "..." },
+      "recipe_items": [ { "ingredient_id": ..., "quantity_used": ... }, ... ]
+    }
+    """
+    res = update_menu_item_recipe(recipe_id, payload['menu_data'], payload['recipe_items'])
+    return res
 
 # --- INVOICES ---
 @app.get("/invoices")

@@ -220,6 +220,37 @@ def get_all_recipes():
 def delete_recipe(menu_item_id: str):
     return supabase.table("recipes").delete().eq("menu_item_id", menu_item_id).execute()
 
+def update_menu_item_recipe(m_id: int, menu_data: Dict[str, Any], recipe_items: List[Dict[str, Any]]):
+    """
+    Updates a menu item and its associated recipe ingredients.
+    """
+    # 1. Update basic info (name, price, category, etc.)
+    supabase.table("menu_items").update(menu_data).eq("id", m_id).execute()
+    
+    # 2. Sync recipes table
+    # Deleting existing and inserting new is cleaner than trying to diff
+    supabase.table("recipes").delete().eq("menu_item_id", m_id).execute()
+    
+    if recipe_items:
+        # Prepare rows for batch insert
+        rows = []
+        for ri in recipe_items:
+            rows.append({
+                "menu_item_id": m_id,
+                "ingredient_id": ri.get('ingredient_id'),
+                "sub_recipe_id": ri.get('sub_recipe_id'),
+                "quantity_used": ri['quantity_used'],
+                "additional_cost": ri.get('additional_cost', 0),
+                "yield_rate": ri.get('yield_rate', 100)
+            })
+        supabase.table("recipes").insert(rows).execute()
+    
+    # 3. Force cost cache update
+    new_cost = get_recursive_recipe_cost(m_id)
+    supabase.table("menu_items").update({"last_calculated_cost": new_cost}).eq("id", m_id).execute()
+    
+    return {"id": m_id, "new_cost": round(new_cost, 2)}
+
 # --- REFRESHED COST LOGIC (From database.py) ---
 def get_recursive_recipe_cost(m_id: int, visited: Set[int] = None) -> float:
     if visited is None: visited = set()
