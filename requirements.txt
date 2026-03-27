@@ -1,4 +1,5 @@
-streamlit
+fastapi
+uvicorn
 supabase
-pandas
-plotly
+python-dotenv
+pydantic
