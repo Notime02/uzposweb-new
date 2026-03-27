@@ -6,12 +6,28 @@ venv/
 env/
 .env
 
+# Javascript/React
+node_modules/
+dist/
+build/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
 # Streamlit
 .streamlit/secrets.toml
 
 # Generated/Temp Files
 schema_output*.json
 Yeni Metin Belgesi.txt
+check_mapping*.py
+debug_schema*.py
+lookup_uuid.py
+schema_debug.json
 
 # OS
 .DS_Store
