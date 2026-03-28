@@ -10,7 +10,7 @@ import {
 } from 'recharts';
 import axios from 'axios';
 
-const api = axios.create({ baseURL: 'http://localhost:8000' });
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000' });
 
 const StatCard = ({ icon: Icon, title, value, trend, trendType, color }) => (
   <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group">
