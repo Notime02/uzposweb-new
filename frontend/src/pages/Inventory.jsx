@@ -23,7 +23,9 @@ const Inventory = () => {
     sales_price: 0,
     supplier_id: '', box_quantity: 1,
     name: '', category: 'Genel',
-    tax_rate: 10
+    tax_rate: 10,
+    last_unit_cost: 0,
+    unit_conversion_factor: 1
   });
 
   useEffect(() => {
@@ -68,7 +70,9 @@ const Inventory = () => {
       sales_price: item.sales_price || 0,
       supplier_id: item.supplier_id || '',
       box_quantity: item.box_quantity || 1,
-      tax_rate: item.tax_rate || 10
+      tax_rate: item.tax_rate || 10,
+      last_unit_cost: item.last_unit_cost || 0,
+      unit_conversion_factor: item.unit_conversion_factor || 1
     });
   };
 
@@ -92,6 +96,8 @@ const Inventory = () => {
         updatePayload.sales_price = Number(updatePayload.sales_price);
         updatePayload.box_quantity = Number(updatePayload.box_quantity);
         updatePayload.tax_rate = Number(updatePayload.tax_rate);
+        updatePayload.last_unit_cost = Number(updatePayload.last_unit_cost);
+        updatePayload.unit_conversion_factor = Number(updatePayload.unit_conversion_factor);
         
         // Sanitize IDs
         if (!updatePayload.supplier_id || updatePayload.supplier_id === 'undefined') {
@@ -113,7 +119,9 @@ const Inventory = () => {
           usage_unit: form.usage_unit || 'Adet',
           supplier_id: (form.supplier_id && form.supplier_id !== 'undefined') ? String(form.supplier_id) : null,
           box_quantity: Number(form.box_quantity) || 1,
-          tax_rate: Number(form.tax_rate) || 10
+          tax_rate: Number(form.tax_rate) || 10,
+          last_unit_cost: Number(form.last_unit_cost) || 0,
+          unit_conversion_factor: Number(form.unit_conversion_factor) || 1
         };
         const res = await api.post('/ingredients', createPayload);
         if (res.data) setItems([...items, res.data]);
@@ -123,7 +131,7 @@ const Inventory = () => {
         stock_quantity: 0,
         is_menu: false, is_saleable: false,
         purchase_unit: 'Adet', usage_unit: 'Adet', box_quantity: 1, supplier_id: '',
-        tax_rate: 10
+        tax_rate: 10, last_unit_cost: 0, unit_conversion_factor: 1
       });
     } catch (err) {
       console.error("Envanter kaydetme hatası:", err);
@@ -400,6 +408,26 @@ const Inventory = () => {
                       type="number"
                       className="w-full bg-black border-none rounded-xl py-2 px-4 text-sm font-bold text-white mt-1"
                       value={form.sales_price} onChange={e => setForm({...form, sales_price: Number(e.target.value)})}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="text-[10px] font-black text-slate-500 uppercase ml-2 tracking-widest text-primary">Birim Alış Maliyeti (₺)</label>
+                    <input 
+                      type="number"
+                      className="w-full bg-black border-none rounded-xl py-2 px-4 text-sm font-bold text-white mt-1 border border-primary/20"
+                      value={form.last_unit_cost} onChange={e => setForm({...form, last_unit_cost: Number(e.target.value)})}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-slate-500 uppercase ml-2 tracking-widest text-primary">Birim Dönüştürme Katsayısı</label>
+                    <input 
+                      type="number"
+                      className="w-full bg-black border-none rounded-xl py-2 px-4 text-sm font-bold text-white mt-1 border border-primary/20"
+                      value={form.unit_conversion_factor} onChange={e => setForm({...form, unit_conversion_factor: Number(e.target.value)})}
+                      placeholder="Örn: Gram için 1000"
                     />
                   </div>
                 </div>

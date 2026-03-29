@@ -30,7 +30,19 @@ def create_ingredient(data: Dict[str, Any]):
     return None
 
 def update_ingredient(ing_id: str, data: Dict[str, Any]):
-    return supabase.table("ingredients").update(data).eq("id", ing_id).execute()
+    res = supabase.table("ingredients").update(data).eq("id", ing_id).execute()
+    # Trigger global cost update if cost or factor changed
+    if 'last_unit_cost' in data or 'unit_conversion_factor' in data:
+        update_all_menu_costs()
+    return res
+
+def update_all_menu_costs():
+    """Recalculates costs for all menu items."""
+    res = supabase.table("menu_items").select("id").execute()
+    if res and res.data:
+        for item in res.data:
+            get_recursive_recipe_cost(item['id'])
+    return True
 
 def delete_ingredient(ing_id: str):
     return supabase.table("ingredients").delete().eq("id", ing_id).execute()
@@ -305,8 +317,13 @@ def get_recursive_recipe_cost(m_id: int, visited: Set[int] = None) -> float:
             if row.get('ingredient_id'):
                 ing = row['ingredients']
                 b_qty = float(ing.get('box_quantity') or 1.0)
+                conv_f = float(ing.get('unit_conversion_factor') or 1.0)
                 if b_qty <= 0: b_qty = 1.0
-                line_cost = (qty_effective / b_qty) * ing['last_unit_cost']
+                if conv_f <= 0: conv_f = 1.0
+                
+                # Formula: (Used Qty / (Box Qty * Conv Factor)) * Box Price
+                # Example: (250g / (1 * 1000)) * 100 TL/KG = 25 TL
+                line_cost = (qty_effective / (b_qty * conv_f)) * float(ing.get('last_unit_cost') or 0.0)
                 line_cost += float(row.get('additional_cost', 0.0))
                 total_cost += line_cost
             elif row.get('sub_recipe_id'):

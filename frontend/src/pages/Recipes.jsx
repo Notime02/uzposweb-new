@@ -11,7 +11,7 @@ const EditRecipeModal = ({ recipe, onClose, onSave, ingredients }) => {
   const [formData, setFormData] = useState({
     name: recipe?.name || '',
     category: recipe?.category || '',
-    price: recipe?.price || 0,
+    price: recipe?.sales_price || 0,
     recipe_items: recipe?.recipes || []
   });
   const [searchTerm, setSearchTerm] = useState('');
@@ -64,7 +64,6 @@ const EditRecipeModal = ({ recipe, onClose, onSave, ingredients }) => {
         </div>
 
         <div className="flex-1 overflow-y-auto p-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left: Basic Info & Search */}
           <div className="space-y-6">
             <div className="space-y-4">
               <div>
@@ -126,7 +125,6 @@ const EditRecipeModal = ({ recipe, onClose, onSave, ingredients }) => {
             </div>
           </div>
 
-          {/* Right: Recipe Items */}
           <div className="space-y-4">
             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
               <Utensils size={14} /> Reçete İçeriği
@@ -214,7 +212,7 @@ const RecipeCard = ({ recipe, onSelect, onEdit }) => (
         </div>
         <div className="flex items-baseline gap-2">
           <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest text-right">Satış</span>
-          <span className="text-md font-black text-emerald-400">{(recipe.price || 0).toLocaleString('tr-TR')} ₺</span>
+          <span className="text-md font-black text-emerald-400">{(recipe.sales_price || 0).toLocaleString('tr-TR')} ₺</span>
         </div>
       </div>
     </div>
@@ -320,7 +318,7 @@ const Recipes = () => {
       }
       
       setEditingRecipe(null);
-      fetchRecipes(); // Refresh list
+      fetchRecipes();
     } catch (err) {
       console.error("Kaydetme hatası:", err);
       alert("Reçete kaydedilemedi.");
@@ -352,7 +350,6 @@ const Recipes = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Left Side: Recipe List */}
         <div className="lg:col-span-3 space-y-6">
           {loading ? (
              <div className="py-20 text-center text-slate-500 font-black animate-pulse uppercase tracking-[0.3em]">Yükleniyor...</div>
@@ -370,12 +367,28 @@ const Recipes = () => {
           )}
         </div>
 
-        {/* Right Side: Analysis Panel */}
         <div className="space-y-6">
           <div className="bg-slate-900 border border-slate-800 p-8 rounded-[3rem] sticky top-8">
-            <h2 className="text-xl font-black text-white mb-6 flex items-center gap-2">
-              <Layers size={20} className="text-primary" /> Analiz Paneli
-            </h2>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-black text-white flex items-center gap-2">
+                <Layers size={20} className="text-primary" /> Analiz Paneli
+              </h2>
+              <button 
+                onClick={async () => {
+                  try {
+                    await api.post('/recipes/sync-costs');
+                    fetchRecipes();
+                    alert("Maliyetler güncellendi!");
+                  } catch (err) {
+                    alert("Güncelleme hatası.");
+                  }
+                }}
+                className="p-2 bg-primary/10 hover:bg-primary/20 rounded-xl text-primary transition-all"
+                title="Tüm Maliyetleri Yenile"
+              >
+                <Calculator size={18} />
+              </button>
+            </div>
             
             {selectedRecipe ? (
               <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
@@ -405,7 +418,7 @@ const Recipes = () => {
                       <span className="text-xs font-black text-emerald-500 uppercase">Kâr Marjı</span>
                    </div>
                    <span className="text-lg font-black text-emerald-400">
-                     %{selectedRecipe.price > 0 ? Math.round(((selectedRecipe.price - selectedRecipe.current_cost) / selectedRecipe.price) * 100) : 0}
+                     %{selectedRecipe.sales_price > 0 ? Math.round(((selectedRecipe.sales_price - selectedRecipe.current_cost) / selectedRecipe.sales_price) * 100) : 0}
                    </span>
                 </div>
 

@@ -16,6 +16,7 @@ class Ingredient(BaseModel):
     tax_rate: float = 10.0
     purchase_unit: str = "Adet"
     usage_unit: str = "Adet"
+    unit_conversion_factor: float = 1.0
 
 class IngredientUpdate(BaseModel):
     name: Optional[str] = None
@@ -30,6 +31,7 @@ class IngredientUpdate(BaseModel):
     tax_rate: Optional[float] = None
     purchase_unit: Optional[str] = None
     usage_unit: Optional[str] = None
+    unit_conversion_factor: Optional[float] = None
 
 class Supplier(BaseModel):
     id: Optional[str] = None

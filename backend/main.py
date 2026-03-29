@@ -193,6 +193,12 @@ def list_recipes():
     print("DEBUG: Reçete listesi isteniyor...")
     return get_all_recipes()
 
+@app.post("/recipes/sync-costs")
+def sync_all_recipe_costs():
+    """Manually triggers recalculation for all recipes."""
+    update_all_menu_costs()
+    return {"message": "Success"}
+
 @app.post("/recipes")
 def create_recipe(payload: Dict[str, Any] = Body(...)):
     """
