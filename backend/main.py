@@ -105,13 +105,25 @@ def calculate_unit(box_price: float, units_per_box: float, tax_rate: float = 10,
 
 @app.put("/ingredients/{ingredient_id}")
 def edit_ingredient(ingredient_id: str, data: IngredientUpdate):
-    # Map the update model back to the DB columns if they differ
+    """
+    Updates an ingredient's details. Handles mapping 'unit_price' to 'sales_price'
+    if sent from older frontend versions.
+    """
     db_data = data.model_dump(exclude_unset=True)
+    
+    # Mapping unit_price -> sales_price for Supabase column naming consistency
     if "unit_price" in db_data:
         db_data["sales_price"] = db_data.pop("unit_price")
     
-    update_ingredient(ingredient_id, db_data)
-    return {"message": "Updated"}
+    # Ensure ID is not in data
+    if "id" in db_data:
+        db_data.pop("id")
+        
+    try:
+        update_ingredient(ingredient_id, db_data)
+        return {"message": "Updated", "id": ingredient_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.delete("/ingredients/{ingredient_id}")
 def remove_ingredient(ingredient_id: str):

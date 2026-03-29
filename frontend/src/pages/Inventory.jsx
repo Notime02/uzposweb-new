@@ -85,19 +85,14 @@ const Inventory = () => {
   const handleSave = async () => {
     try {
       if (editingItem) {
-        const updatePayload = {
-          name: form.name,
-          stock_quantity: Number(form.stock_quantity),
-          sales_price: Number(form.sales_price),
-          is_menu: Boolean(form.is_menu),
-          is_saleable: Boolean(form.is_saleable),
-          category: form.category,
-          purchase_unit: form.purchase_unit || 'Adet',
-          usage_unit: form.usage_unit || 'Adet',
-          supplier_id: form.supplier_id ? String(form.supplier_id) : null,
-          box_quantity: Number(form.box_quantity) || 1,
-          tax_rate: Number(form.tax_rate) || 10
-        };
+        const { id, last_unit_cost, ...updatePayload } = { ...form };
+        
+        // Ensure numbers are numbers
+        updatePayload.stock_quantity = Number(updatePayload.stock_quantity);
+        updatePayload.sales_price = Number(updatePayload.sales_price);
+        updatePayload.box_quantity = Number(updatePayload.box_quantity);
+        updatePayload.tax_rate = Number(updatePayload.tax_rate);
+        
         await api.put(`/ingredients/${editingItem.id}`, updatePayload);
         setItems(items.map(i => i.id === editingItem.id ? { ...i, ...form } : i));
         setEditingItem(null);
@@ -126,7 +121,9 @@ const Inventory = () => {
         tax_rate: 10
       });
     } catch (err) {
-      alert("Kaydetme hatası!");
+      console.error("Envanter kaydetme hatası:", err);
+      const msg = err.response?.data?.detail || err.message || "Bilinmeyen hata";
+      alert(`Kaydetme hatası: ${msg}`);
     }
   };
 

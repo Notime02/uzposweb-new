@@ -242,8 +242,10 @@ const Invoices = () => {
       setEditingInvoiceId(null);
       setView('list');
     } catch (err) {
-      console.error("Kaydetme hatası:", err);
-      setError("Fatura kaydedilirken bir hata oluştu.");
+      console.error("Fatura kaydetme hatası:", err);
+      const msg = err.response?.data?.detail || err.message || "Bilinmeyen hata";
+      setError(`Fatura kaydedilirken bir hata oluştu: ${msg}`);
+      alert(`Fatura kaydedilemedi: ${msg}`);
     } finally {
       setSaving(false);
     }
@@ -285,7 +287,8 @@ const Invoices = () => {
       setView('create');
     } catch (err) {
       console.error("Fatura detay hatası:", err);
-      alert("Fatura bilgileri yüklenirken bir hata oluştu.");
+      const msg = err.response?.data?.detail || err.message || "Bilinmeyen hata";
+      alert(`Fatura bilgileri yüklenirken bir hata oluştu: ${msg}`);
     } finally {
       setLoading(false);
     }

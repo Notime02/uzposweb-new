@@ -22,6 +22,7 @@ class IngredientUpdate(BaseModel):
     category: Optional[str] = None
     stock_quantity: Optional[float] = None
     unit_price: Optional[float] = None
+    sales_price: Optional[float] = None
     is_saleable: Optional[bool] = None
     is_menu: Optional[bool] = None
     supplier_id: Optional[str] = None
