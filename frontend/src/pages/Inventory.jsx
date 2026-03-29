@@ -84,7 +84,7 @@ const Inventory = () => {
 
   const handleSave = async () => {
     try {
-      if (editingItem) {
+      if (editingItem && editingItem.id) {
         const { id, last_unit_cost, ...updatePayload } = { ...form };
         
         // Ensure numbers are numbers
@@ -99,7 +99,7 @@ const Inventory = () => {
         }
         
         await api.put(`/ingredients/${editingItem.id}`, updatePayload);
-        setItems(items.map(i => i.id === editingItem.id ? { ...i, ...form } : i));
+        setItems(items.map(i => i.id === editingItem.id ? { ...i, ...form, id: editingItem.id } : i));
         setEditingItem(null);
       } else {
         const createPayload = {

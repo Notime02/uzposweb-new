@@ -119,9 +119,11 @@ def calculate_unit(box_price: float, units_per_box: float, tax_rate: float = 10,
 @app.put("/ingredients/{ingredient_id}")
 def edit_ingredient(ingredient_id: str, data: IngredientUpdate):
     """
-    Updates an ingredient's details. Handles mapping 'unit_price' to 'sales_price'
-    if sent from older frontend versions.
+    Updates an ingredient's details with UUID validation.
     """
+    if not ingredient_id or ingredient_id == 'undefined':
+        raise HTTPException(status_code=400, detail="Geçersiz Ürün ID'si.")
+        
     db_data = clean_payload(data.model_dump(exclude_unset=True))
     
     # Mapping unit_price -> sales_price for Supabase column naming consistency
