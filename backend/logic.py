@@ -270,7 +270,7 @@ def create_menu_item_recipe(menu_data: Dict[str, Any], recipe_items: List[Dict[s
     res = supabase.table("menu_items").insert({
         "name": menu_data['name'],
         "category": menu_data.get('category', 'Genel'),
-        "price": menu_data.get('price', 0.0),
+        "base_price": menu_data.get('price', 0.0),
         "last_calculated_cost": 0.0
     }).execute()
     

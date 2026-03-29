@@ -212,7 +212,7 @@ const RecipeCard = ({ recipe, onSelect, onEdit }) => (
         </div>
         <div className="flex items-baseline gap-2">
           <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest text-right">Satış</span>
-          <span className="text-md font-black text-emerald-400">{(recipe.sales_price || 0).toLocaleString('tr-TR')} ₺</span>
+          <span className="text-md font-black text-emerald-400">{(recipe.base_price || 0).toLocaleString('tr-TR')} ₺</span>
         </div>
       </div>
     </div>
@@ -418,7 +418,7 @@ const Recipes = () => {
                       <span className="text-xs font-black text-emerald-500 uppercase">Kâr Marjı</span>
                    </div>
                    <span className="text-lg font-black text-emerald-400">
-                     %{selectedRecipe.sales_price > 0 ? Math.round(((selectedRecipe.sales_price - selectedRecipe.current_cost) / selectedRecipe.sales_price) * 100) : 0}
+                     %{selectedRecipe.base_price > 0 ? Math.round(((selectedRecipe.base_price - selectedRecipe.current_cost) / selectedRecipe.base_price) * 100) : 0}
                    </span>
                 </div>
 
