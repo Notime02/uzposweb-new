@@ -293,13 +293,13 @@ const Recipes = () => {
     }
   };
 
-  const handleUpdateRecipe = async (id, data) => {
+  const handleSaveRecipe = async (id, data) => {
     try {
       const payload = {
         menu_data: { 
           name: data.name, 
           price: parseFloat(data.price) || 0,
-          category: data.category 
+          category: data.category || 'Genel'
         },
         recipe_items: data.recipe_items.map(ri => ({
           ingredient_id: ri.ingredient_id,
@@ -309,12 +309,17 @@ const Recipes = () => {
         }))
       };
 
-      await api.put(`/recipes/${id}`, payload);
+      if (id) {
+        await api.put(`/recipes/${id}`, payload);
+      } else {
+        await api.post('/recipes', payload);
+      }
+      
       setEditingRecipe(null);
       fetchRecipes(); // Refresh list
     } catch (err) {
-      console.error("Güncelleme hatası:", err);
-      alert("Reçete güncellenemedi.");
+      console.error("Kaydetme hatası:", err);
+      alert("Reçete kaydedilemedi.");
     }
   };
 
@@ -325,7 +330,7 @@ const Recipes = () => {
           recipe={editingRecipe} 
           ingredients={ingredients}
           onClose={() => setEditingRecipe(null)}
-          onSave={(data) => handleUpdateRecipe(editingRecipe.id, data)}
+          onSave={(data) => handleSaveRecipe(editingRecipe.id, data)}
         />
       )}
 
@@ -334,7 +339,10 @@ const Recipes = () => {
           <h1 className="text-3xl font-black text-white tracking-tight">Reçeteler & Operasyon</h1>
           <p className="text-slate-500 font-medium mt-1 italic italic">Fiyat dalgalanmalarını ve fire oranlarını kontrol edin.</p>
         </div>
-        <button className="flex items-center gap-2 px-8 py-3 bg-white text-black font-black rounded-2xl hover:bg-slate-200 transition-all active:scale-95 shadow-xl shadow-white/5">
+        <button 
+          onClick={() => setEditingRecipe({})}
+          className="flex items-center gap-2 px-8 py-3 bg-white text-black font-black rounded-2xl hover:bg-slate-200 transition-all active:scale-95 shadow-xl shadow-white/5"
+        >
            <Plus size={20} /> Yeni Reçete Hazırla
         </button>
       </div>

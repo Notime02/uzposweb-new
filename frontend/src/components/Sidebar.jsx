@@ -41,10 +41,20 @@ const Sidebar = () => {
         ))}
       </nav>
 
-      <div className="absolute bottom-6 left-4 right-4">
-        <button className="flex items-center gap-3 px-4 py-3 w-full rounded-lg hover:bg-slate-800 transition-colors">
+      <div className="absolute bottom-6 left-4 right-4 space-y-2">
+        <button className="flex items-center gap-3 px-4 py-3 w-full rounded-[1.2rem] hover:bg-slate-800 transition-colors text-slate-400 hover:text-white">
           <Settings size={20} />
           <span className="font-medium">Ayarlar</span>
+        </button>
+        <button 
+          onClick={() => {
+            localStorage.removeItem('uzpos_auth');
+            window.location.reload();
+          }}
+          className="flex items-center gap-3 px-4 py-3 w-full rounded-[1.2rem] hover:bg-rose-500/10 text-rose-500 transition-colors"
+        >
+          <LayoutDashboard size={20} />
+          <span className="font-black italic uppercase text-xs tracking-widest">Çıkış Yap</span>
         </button>
       </div>
     </aside>

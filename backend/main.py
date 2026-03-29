@@ -178,6 +178,16 @@ def list_recipes():
     print("DEBUG: Reçete listesi isteniyor...")
     return get_all_recipes()
 
+@app.post("/recipes")
+def create_recipe(payload: Dict[str, Any] = Body(...)):
+    """
+    Creates a new menu item and its recipe.
+    """
+    res = create_menu_item_recipe(payload['menu_data'], payload['recipe_items'])
+    if not res:
+        raise HTTPException(status_code=400, detail="Could not create recipe")
+    return res
+
 @app.get("/recipes/{menu_item_id}/cost")
 def get_recipe_cost(menu_item_id: int):
     cost = get_recursive_recipe_cost(menu_item_id)
@@ -189,14 +199,9 @@ def remove_recipe(recipe_id: str):
     return {"message": "Deleted"}
 
 @app.put("/recipes/{recipe_id}")
-def edit_recipe(recipe_id: int, payload: Dict[str, Any] = Body(...)):
+def edit_recipe(recipe_id: str, payload: Dict[str, Any] = Body(...)):
     """
     Updates basic info and ingredients list for a recipe.
-    Payload expected:
-    {
-      "menu_data": { "name": "...", "price": ..., "category": "..." },
-      "recipe_items": [ { "ingredient_id": ..., "quantity_used": ... }, ... ]
-    }
     """
     res = update_menu_item_recipe(recipe_id, payload['menu_data'], payload['recipe_items'])
     return res

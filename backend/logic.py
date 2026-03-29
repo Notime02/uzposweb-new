@@ -248,8 +248,41 @@ def update_menu_item_recipe(m_id: int, menu_data: Dict[str, Any], recipe_items: 
     # 3. Force cost cache update
     new_cost = get_recursive_recipe_cost(m_id)
     supabase.table("menu_items").update({"last_calculated_cost": new_cost}).eq("id", m_id).execute()
-    
     return {"id": m_id, "new_cost": round(new_cost, 2)}
+
+def create_menu_item_recipe(menu_data: Dict[str, Any], recipe_items: List[Dict[str, Any]]):
+    """
+    Creates a new menu item and its recipe items.
+    """
+    # 1. Create Menu Item
+    res = supabase.table("menu_items").insert({
+        "name": menu_data['name'],
+        "category": menu_data.get('category', 'Genel'),
+        "price": menu_data.get('price', 0.0),
+        "last_calculated_cost": 0.0
+    }).execute()
+    
+    if not res or not res.data: return None
+    menu_id = res.data[0]['id']
+    
+    # 2. Add Recipe Items
+    rows = []
+    for ri in recipe_items:
+        rows.append({
+            "menu_item_id": menu_id,
+            "ingredient_id": ri['ingredient_id'],
+            "quantity_used": ri['quantity_used'],
+            "yield_rate": ri.get('yield_rate', 100),
+            "additional_cost": ri.get('additional_cost', 0.0)
+        })
+    
+    if rows:
+        supabase.table("recipes").insert(rows).execute()
+        
+    # 3. Initial Cost Calculation
+    get_recursive_recipe_cost(menu_id)
+    
+    return {"id": menu_id, "message": "Created"}
 
 # --- REFRESHED COST LOGIC (From database.py) ---
 def get_recursive_recipe_cost(m_id: int, visited: Set[int] = None) -> float:
@@ -271,7 +304,9 @@ def get_recursive_recipe_cost(m_id: int, visited: Set[int] = None) -> float:
             
             if row.get('ingredient_id'):
                 ing = row['ingredients']
-                line_cost = (qty_effective / ing['unit_conversion_factor']) * ing['last_unit_cost']
+                b_qty = float(ing.get('box_quantity') or 1.0)
+                if b_qty <= 0: b_qty = 1.0
+                line_cost = (qty_effective / b_qty) * ing['last_unit_cost']
                 line_cost += float(row.get('additional_cost', 0.0))
                 total_cost += line_cost
             elif row.get('sub_recipe_id'):
