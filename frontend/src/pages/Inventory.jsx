@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 
-const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000' });
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || 'https://api.uzpos.site' });
 
 const Inventory = () => {
   const [items, setItems] = useState([]);
@@ -22,7 +22,7 @@ const Inventory = () => {
     purchase_unit: 'Adet', usage_unit: 'Adet', 
     sales_price: 0,
     supplier_id: '', box_quantity: 1,
-    name: '', category: 'Genel',
+    name: '', category: 'Kebab çeşitleri',
     tax_rate: 10,
     last_unit_cost: 0,
     unit_conversion_factor: 1
@@ -127,7 +127,7 @@ const Inventory = () => {
         if (res.data) setItems([...items, res.data]);
       }
       setForm({ 
-        name: '', category: 'Genel', sales_price: 0, 
+        name: '', category: 'Kebab çeşitleri', sales_price: 0, 
         stock_quantity: 0,
         is_menu: false, is_saleable: false,
         purchase_unit: 'Adet', usage_unit: 'Adet', box_quantity: 1, supplier_id: '',
@@ -321,7 +321,10 @@ const Inventory = () => {
                 <div>
                   <label className="text-[10px] font-black text-slate-500 uppercase ml-2 tracking-widest">Kategori Seçimi</label>
                   <div className="flex flex-wrap gap-2 mt-2">
-                    {['Genel', 'İçecekler', 'Diğer', 'Hammadde', 'Sarf'].map(cat => (
+                    {[
+                      'Kebab çeşitleri', 'Dürüm çeşitleri', 'Pide çeşitleri', 
+                      'Tepsi yemekleri', 'Çorba çeşitleri', 'Extralar', 'İçecekler'
+                    ].map(cat => (
                       <button 
                         key={cat}
                         onClick={() => setForm({...form, category: cat})}
@@ -476,7 +479,7 @@ const Inventory = () => {
               onClick={() => {
                 setEditingItem({});
                 setForm({ 
-                  name: '', category: 'Genel', sales_price: 0, 
+                  name: '', category: 'Kebab çeşitleri', sales_price: 0, 
                   stock_quantity: 0,
                   is_menu: false, is_saleable: false,
                   purchase_unit: 'Adet', usage_unit: 'Adet', box_quantity: 1, supplier_id: '',

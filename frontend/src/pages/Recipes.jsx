@@ -78,12 +78,19 @@ const EditRecipeModal = ({ recipe, onClose, onSave, ingredients }) => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Kategori</label>
-                  <input 
-                    type="text" 
+                  <select 
                     value={formData.category}
                     onChange={(e) => setFormData({...formData, category: e.target.value})}
-                    className="w-full bg-black border border-slate-800 rounded-2xl px-5 py-3 text-white font-bold focus:border-primary/50 outline-none transition-all"
-                  />
+                    className="w-full bg-black border border-slate-800 rounded-2xl px-5 py-3 text-white font-bold focus:border-primary/50 outline-none transition-all appearance-none cursor-pointer"
+                  >
+                    <option value="">Kategori Seçin</option>
+                    <option value="Kebab çeşitleri">Kebab çeşitleri</option>
+                    <option value="Dürüm çeşitleri">Dürüm çeşitleri</option>
+                    <option value="Pide çeşitleri">Pide çeşitleri</option>
+                    <option value="Tepsi yemekleri">Tepsi yemekleri</option>
+                    <option value="Çorba çeşitleri">Çorba çeşitleri</option>
+                    <option value="Extralar">Extralar</option>
+                  </select>
                 </div>
                 <div>
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Satış Fiyatı (₺)</label>

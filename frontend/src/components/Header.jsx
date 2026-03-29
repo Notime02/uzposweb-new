@@ -3,7 +3,7 @@ import { Bell, User, Search } from 'lucide-react';
 
 const Header = () => {
   return (
-    <header className="fixed top-0 right-0 left-64 h-16 glass z-40 px-8 flex items-center justify-between">
+    <header className="fixed top-0 right-0 left-72 h-16 glass z-40 px-8 flex items-center justify-between transition-all duration-300 ease-in-out">
       <div className="relative w-96">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
         <input

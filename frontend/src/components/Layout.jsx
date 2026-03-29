@@ -8,8 +8,8 @@ const Layout = () => {
     <div className="min-h-screen bg-background">
       <Sidebar />
       <Header />
-      <main className="pl-64 pt-16 min-h-screen">
-        <div className="p-8 max-w-[1600px] mx-auto">
+      <main className="pl-72 pt-16 min-h-screen transition-all duration-300 ease-in-out">
+        <div className="p-5 max-w-[1450px] mx-auto">
           <Outlet />
         </div>
       </main>

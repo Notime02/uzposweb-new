@@ -10,7 +10,8 @@ from logic import (
     get_all_recipes, delete_recipe, get_all_sales, get_all_invoices,
     update_ingredient, delete_ingredient, create_ingredient, update_supplier, delete_supplier, add_supplier,
     update_ingredient, delete_ingredient, create_ingredient, update_supplier, delete_supplier, add_supplier,
-    get_invoice_full_data, update_full_invoice, delete_invoice, update_menu_item_recipe
+    get_invoice_full_data, update_full_invoice, delete_invoice, update_menu_item_recipe,
+    get_qr_menu_items
 )
 from database import supabase
 from typing import List, Dict, Any
@@ -164,9 +165,27 @@ def list_accounts():
     res = get_all_accounts()
     return res.data if res.data else []
 
+@app.post("/accounts")
+def create_account(data: Dict[str, Any] = Body(...)):
+    """Creates a new account (register)."""
+    res = add_account(data['name'], float(data.get('balance', 0.0)))
+    return res.data[0] if res.data else {"error": "Failed"}
+
+@app.get("/accounts/targets")
+def list_targets():
+    """Returns possible transaction targets."""
+    return get_account_targets()
+
 @app.post("/transactions")
-def add_transaction(account_id: int, amount: float, t_type: str, description: str):
-    success = save_transaction(account_id, amount, t_type, description)
+def add_transaction(payload: Dict[str, Any] = Body(...)):
+    """Expected: account_id, amount, t_type, description, target"""
+    success = save_transaction(
+        int(payload['account_id']), 
+        float(payload['amount']), 
+        payload['t_type'], 
+        payload.get('description', ''),
+        payload.get('target', None)
+    )
     if not success:
         raise HTTPException(status_code=400, detail="Transaction failed")
     return {"message": "Success"}
@@ -186,6 +205,12 @@ def create_supplier(data: Dict[str, Any] = Body(...)):
 def remove_supplier(supplier_id: str):
     delete_supplier(supplier_id)
     return {"message": "Deleted"}
+
+# --- QR MENU (Public) ---
+@app.get("/qr-menu/items")
+def fetch_qr_menu():
+    """Returns combined items for QR Menu."""
+    return get_qr_menu_items()
 
 # --- RECIPES ---
 @app.get("/recipes")

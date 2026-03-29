@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   TrendingUp, CreditCard, Wallet, Banknote, 
   UtensilsCrossed, Bike, Package, AlertCircle,
-  ArrowUpRight, ArrowDownRight, Clock, Users, Bell
+  ArrowUpRight, ArrowDownRight, Clock, Users, Bell,
+  QrCode
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, 
@@ -10,10 +11,10 @@ import {
 } from 'recharts';
 import axios from 'axios';
 
-const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000' });
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || 'https://api.uzpos.site' });
 
 const StatCard = ({ icon: Icon, title, value, trend, trendType, color }) => (
-  <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group">
+  <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group">
     <div className="flex items-start justify-between">
       <div className={`p-3 rounded-xl ${color} bg-opacity-10 transition-transform group-hover:scale-110`}>
         <Icon className={`${color.replace('bg-', 'text-')}`} size={24} />
@@ -106,6 +107,14 @@ const Dashboard = () => {
           <p className="text-slate-500 font-medium mt-1 italic italic">İşletmenizin bugünkü performansı ve mali durumu.</p>
         </div>
         <div className="flex items-center gap-4">
+          <button 
+            onClick={() => window.open('https://qr.uzpos.site', '_blank')}
+            className="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-primary transition-all shadow-sm"
+            title="QR Menü Önizleme"
+          >
+             <QrCode size={22} />
+          </button>
+
           <div className="relative group">
             <button className="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 text-slate-400 hover:text-rose-500 transition-all shadow-sm">
                <Bell size={22} />

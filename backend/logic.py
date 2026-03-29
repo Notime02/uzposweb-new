@@ -188,9 +188,30 @@ def update_full_invoice(invoice_id: str, invoice_data: Dict[str, Any]):
 
 # --- ACCOUNTS & TRANSACTIONS ---
 def get_all_accounts():
-    return supabase.table("accounts").select("*").execute()
+    return supabase.table("accounts").select("*").order("name").execute()
 
-def save_transaction(account_id: int, amount: float, t_type: str, desc: str):
+def add_account(name: str, balance: float = 0.0):
+    return supabase.table("accounts").insert({"name": name, "balance": balance}).execute()
+
+def get_account_targets():
+    """Returns a list of potential transaction targets: Caris + Categories."""
+    # 1. Caris (Suppliers)
+    res = supabase.table("suppliers").select("id, name").order("name").execute()
+    caris = [{"id": s['id'], "name": s['name'], "type": "Cari"} for s in res.data] if res.data else []
+    
+    # 2. Fixed Categories (As requested by user: Personel maaşları, dükkan giderleri vb)
+    categories = [
+        {"id": "cat_salary", "name": "Personel Maaşı", "type": "Gider"},
+        {"id": "cat_rent", "name": "Dükkan Kirası", "type": "Gider"},
+        {"id": "cat_bill", "name": "Fatura (Su/Elektirik/Gaz)", "type": "Gider"},
+        {"id": "cat_general", "name": "Genel Dükkan Gideri", "type": "Gider"},
+        {"id": "cat_other_debt", "name": "Cari Dışı Borç Ödemesi", "type": "Gider"},
+        {"id": "cat_other_income", "name": "Diğer Gelir", "type": "Gelir"}
+    ]
+    
+    return caris + categories
+
+def save_transaction(account_id: int, amount: float, t_type: str, desc: str, target: str = None):
     """Saves movement and updates account balance."""
     op = 1 if t_type == "Giriş" else -1
     acc_res = supabase.table("accounts").select("balance").eq("id", account_id).single().execute()
@@ -203,11 +224,64 @@ def save_transaction(account_id: int, amount: float, t_type: str, desc: str):
             "amount": amount,
             "type": t_type,
             "description": desc,
+            "target": target, # New field
             "created_at": datetime.now().isoformat()
         }
         supabase.table("account_transactions").insert(move).execute()
+        
+        # If target IS a Cari, we should ALSO update the supplier balance (as debt payment)
+        # This is a bit complex, but let's try to detect if target is a UUID (supplier)
+        if target and target.startswith('{') == False: # Simple UUID check or just try
+             # Actually let's keep it simple for now as per user request: "nereye kısmına carileri ekle"
+             pass
+
         return True
     return False
+
+def get_qr_menu_items():
+    """
+    Fetches all Saleable Items for the QR Menu.
+    Combines: 
+      1. All records from 'menu_items'
+      2. All records from 'ingredients' marked as 'is_menu'
+    Standardizes output format.
+    """
+    # 1. Fetch Menu Items (Ready-to-eat products)
+    res_m = supabase.table("menu_items").select("id, name, base_price, category, image_url, description, description_en, description_ru, description_ar").execute()
+    menu_items = []
+    if res_m and res_m.data:
+        for m in res_m.data:
+            menu_items.append({
+                "id": f"m_{m['id']}",
+                "name": m['name'],
+                "price": m['base_price'],
+                "category": m.get('category', 'Genel'),
+                "image_url": m.get('image_url'),
+                "description": m.get('description'),
+                "description_en": m.get('description_en'),
+                "description_ru": m.get('description_ru'),
+                "description_ar": m.get('description_ar'),
+                "source": "menu_items"
+            })
+            
+    # 2. Fetch Ingredients marked as Menu (Simple products like Ayran, Su etc)
+    res_i = supabase.table("ingredients").select("id, name, menu_name, menu_price, sales_price, category, image_url, description, menu_description, description_en, description_ru, description_ar, is_menu, last_unit_cost").eq("is_menu", True).execute()
+    if res_i and res_i.data:
+        for i in res_i.data:
+            menu_items.append({
+                "id": f"i_{i['id']}",
+                "name": i.get('menu_name') or i['name'],
+                "price": i.get('menu_price') or i.get('sales_price') or i.get('last_unit_cost', 0),
+                "category": i.get('category', 'İçecek/Diğer'),
+                "image_url": i.get('image_url'),
+                "description": i.get('description') or i.get('menu_description'),
+                "description_en": i.get('description_en'),
+                "description_ru": i.get('description_ru'),
+                "description_ar": i.get('description_ar'),
+                "source": "ingredients"
+            })
+            
+    return menu_items
 
 # --- RECIPES (CRUD) ---
 def get_all_recipes():
@@ -236,8 +310,14 @@ def update_menu_item_recipe(m_id: int, menu_data: Dict[str, Any], recipe_items: 
     """
     Updates a menu item and its associated recipe ingredients.
     """
-    # 1. Update basic info (name, price, category, etc.)
-    supabase.table("menu_items").update(menu_data).eq("id", m_id).execute()
+    # 1. Update basic info (name, base_price, category, etc.)
+    # Map 'price' from frontend to 'base_price' in DB
+    db_menu_data = {
+        "name": menu_data.get('name'),
+        "category": menu_data.get('category'),
+        "base_price": menu_data.get('price', 0.0)
+    }
+    supabase.table("menu_items").update(db_menu_data).eq("id", m_id).execute()
     
     # 2. Sync recipes table
     # Deleting existing and inserting new is cleaner than trying to diff
