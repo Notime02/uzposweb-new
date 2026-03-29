@@ -39,6 +39,23 @@ async def global_exception_handler(request: Request, exc: Exception):
 def read_root():
     return {"message": "UzPos Backend API is running"}
 
+@app.get("/health")
+def health_check():
+    """Verifies that the backend can talk to Supabase."""
+    if not supabase:
+        return JSONResponse(status_code=500, content={"status": "error", "message": "Supabase client not initialized"})
+    
+    try:
+        # Try a simple count or select 1 row
+        res = supabase.table("ingredients").select("count", count="exact").limit(1).execute()
+        return {
+            "status": "ok",
+            "message": "Backend connected to Supabase successfully",
+            "ingredients_count": res.count
+        }
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"status": "error", "message": str(e)})
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     errors = exc.errors()
