@@ -93,6 +93,11 @@ const Inventory = () => {
         updatePayload.box_quantity = Number(updatePayload.box_quantity);
         updatePayload.tax_rate = Number(updatePayload.tax_rate);
         
+        // Sanitize IDs
+        if (!updatePayload.supplier_id || updatePayload.supplier_id === 'undefined') {
+          updatePayload.supplier_id = null;
+        }
+        
         await api.put(`/ingredients/${editingItem.id}`, updatePayload);
         setItems(items.map(i => i.id === editingItem.id ? { ...i, ...form } : i));
         setEditingItem(null);
@@ -106,7 +111,7 @@ const Inventory = () => {
           is_saleable: Boolean(form.is_saleable),
           purchase_unit: form.purchase_unit || 'Adet',
           usage_unit: form.usage_unit || 'Adet',
-          supplier_id: form.supplier_id ? String(form.supplier_id) : null,
+          supplier_id: (form.supplier_id && form.supplier_id !== 'undefined') ? String(form.supplier_id) : null,
           box_quantity: Number(form.box_quantity) || 1,
           tax_rate: Number(form.tax_rate) || 10
         };

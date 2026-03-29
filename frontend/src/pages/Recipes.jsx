@@ -295,13 +295,17 @@ const Recipes = () => {
 
   const handleSaveRecipe = async (id, data) => {
     try {
+      const validItems = data.recipe_items.filter(ri => 
+        ri.ingredient_id && ri.ingredient_id !== 'undefined' && ri.ingredient_id !== ''
+      );
+
       const payload = {
         menu_data: { 
           name: data.name, 
           price: parseFloat(data.price) || 0,
           category: data.category || 'Genel'
         },
-        recipe_items: data.recipe_items.map(ri => ({
+        recipe_items: validItems.map(ri => ({
           ingredient_id: ri.ingredient_id,
           quantity_used: ri.quantity_used,
           yield_rate: ri.yield_rate || 100,

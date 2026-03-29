@@ -39,6 +39,19 @@ async def global_exception_handler(request: Request, exc: Exception):
 def read_root():
     return {"message": "UzPos Backend API is running"}
 
+def clean_payload(data: Any) -> Any:
+    """
+    Recursively converts 'undefined', 'null', and empty strings to None 
+    to prevent UUID syntax errors in Supabase.
+    """
+    if isinstance(data, dict):
+        return {k: clean_payload(v) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [clean_payload(v) for v in data]
+    elif isinstance(data, str) and data.lower() in ("undefined", "null", ""):
+        return None
+    return data
+
 @app.get("/health")
 def health_check():
     """Verifies that the backend can talk to Supabase."""
@@ -109,7 +122,7 @@ def edit_ingredient(ingredient_id: str, data: IngredientUpdate):
     Updates an ingredient's details. Handles mapping 'unit_price' to 'sales_price'
     if sent from older frontend versions.
     """
-    db_data = data.model_dump(exclude_unset=True)
+    db_data = clean_payload(data.model_dump(exclude_unset=True))
     
     # Mapping unit_price -> sales_price for Supabase column naming consistency
     if "unit_price" in db_data:
@@ -183,7 +196,8 @@ def create_recipe(payload: Dict[str, Any] = Body(...)):
     """
     Creates a new menu item and its recipe.
     """
-    res = create_menu_item_recipe(payload['menu_data'], payload['recipe_items'])
+    clean_data = clean_payload(payload)
+    res = create_menu_item_recipe(clean_data['menu_data'], clean_data['recipe_items'])
     if not res:
         raise HTTPException(status_code=400, detail="Could not create recipe")
     return res
