@@ -2,6 +2,9 @@ from fastapi import FastAPI, HTTPException, Body, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi import Response
+
 from schemas import Ingredient, IngredientUpdate, Supplier, Recipe, Invoice, InvoiceItem
 from logic import (
     get_recursive_recipe_cost, calculate_box_to_unit, get_supplier_items, 
@@ -16,7 +19,10 @@ from logic import (
 from database import supabase
 from typing import List, Dict, Any
 
-app = FastAPI(title="UzPos Backend API", version="1.1.0")
+import httpx
+from fastapi.responses import JSONResponse, StreamingResponse
+
+app = FastAPI(title="UzPos Backend API", version="1.2.0")
 
 # 1. CORS Ayarlarını En Başa Al
 app.add_middleware(
@@ -26,6 +32,30 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 1.5 Cloudflare & Browser Caching Proxy for Supabase Images
+@app.get("/proxy-image")
+async def proxy_supabase_image(url: str):
+    """
+    Fetches image from Supabase and serves it through this API 
+    with Cache-Control headers so Cloudflare can cache it.
+    """
+    if not url or not url.startswith("http"):
+        raise HTTPException(status_code=400, detail="Geçersiz görsel adresi")
+        
+    async with httpx.AsyncClient() as client:
+        try:
+            resp = await client.get(url, timeout=10.0)
+            if resp.status_code != 200:
+                return JSONResponse(status_code=resp.status_code, content={"error": "Görsel alınamadı"})
+                
+            return StreamingResponse(
+                iter([resp.content]), 
+                media_type=resp.headers.get("content-type", "image/webp"),
+                headers={"Cache-Control": "public, max-age=604800"}
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
 # 2. Global Hata Yakalayıcı (Cari Hatalar ve Çökmeleri Önlemek İçin)
 @app.exception_handler(Exception)
