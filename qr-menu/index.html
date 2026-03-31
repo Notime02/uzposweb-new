@@ -11,12 +11,9 @@
     <link rel="preconnect" href="https://api.uzpos.site">
     <link rel="dns-prefetch" href="https://api.uzpos.site">
     
-    <!-- Preload Fonts to eliminate render-blocking -->
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Outfit:wght@100;300;400;500;700;900&display=swap">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@100;300;400;500;700;900&display=swap">
-
-    <!-- Inline Critical CSS for instant rendering (LCP/FCP) -->
+    <!-- Eliminate Google Fonts render-blocking by inlining the CSS @import (High Speed) -->
     <style>
+      @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;300;400;500;700;900&display=swap');
       :root { background: #000; color: #fff; }
       body { 
         margin: 0; 
