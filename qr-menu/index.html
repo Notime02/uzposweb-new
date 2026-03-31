@@ -5,13 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>UzPos QR Menü</title>
     
-    <!-- Speed up font and API connections -->
+    <!-- Critical Connection Preconnects -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://api.uzpos.site">
     <link rel="dns-prefetch" href="https://api.uzpos.site">
     
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Preload Fonts to eliminate render-blocking -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Outfit:wght@100;300;400;500;700;900&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@100;300;400;500;700;900&display=swap">
+
+    <!-- Inline Critical CSS for instant rendering (LCP/FCP) -->
+    <style>
+      :root { background: #000; color: #fff; }
+      body { 
+        margin: 0; 
+        background-color: #000; 
+        font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+    </style>
   </head>
   <body class="bg-black text-white">
     <div id="root"></div>
