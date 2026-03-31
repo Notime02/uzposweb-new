@@ -130,31 +130,34 @@ const App = () => {
                     layout
                     key={item.id} 
                     onClick={() => setSelectedProduct(item)}
-                    className="group bg-[#0A0A0A] border border-white/5 rounded-3xl overflow-hidden shadow-xl cursor-pointer active:scale-95 transition-all"
+                    className="group bg-[#0A0A0A] border border-white/5 rounded-3xl overflow-hidden shadow-xl cursor-pointer active:scale-95 transition-all flex flex-col"
                   >
-                    <div className="relative aspect-square overflow-hidden bg-slate-900">
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.5 }}
-                        className="w-full h-full"
-                      >
-                        {item.image_url ? (
-                          <img 
-                            src={item.image_url} 
-                            alt={item.name} 
-                            className="w-full h-full object-cover" 
-                            loading={item.category === 'Kebab çeşitleri' ? 'eager' : 'lazy'}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-slate-800"><Utensils size={32}/></div>
-                        )}
-                      </motion.div>
-                      <div className={`absolute bottom-2 ${selectedLang === 'AR' ? 'left-2' : 'right-2'} px-3 py-1 bg-black/70 backdrop-blur-md rounded-lg font-black text-[11px] text-blue-400 border border-white/5`}>
+                    <div className="relative aspect-square overflow-hidden bg-slate-900 shrink-0">
+                      {/* Skeleton Placeholder */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 to-slate-800 animate-pulse flex items-center justify-center">
+                        <Utensils size={32} className="text-white/5" />
+                      </div>
+
+                      {item.image_url ? (
+                        <motion.img 
+                          initial={{ opacity: 0 }}
+                          whileInView={{ opacity: 1 }}
+                          src={item.image_url} 
+                          alt={item.name} 
+                          className="w-full h-full object-cover relative z-10 transition-opacity duration-700" 
+                          loading={item.category === 'Kebab çeşitleri' ? 'eager' : 'lazy'}
+                          onLoad={(e) => { e.target.style.opacity = 1; }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-slate-800 relative z-10"><Utensils size={32}/></div>
+                      )}
+                      
+                      <div className={`absolute bottom-2 ${selectedLang === 'AR' ? 'left-2' : 'right-2'} px-3 py-1 bg-black/70 backdrop-blur-md rounded-lg font-black text-[11px] text-blue-400 border border-white/5 z-20`}>
                           {item.price.toLocaleString('tr-TR')} ₺
                       </div>
                     </div>
-                    <div className="p-4 flex justify-between items-start">
+
+                    <div className="p-4 flex justify-between items-start grow">
                       <div>
                         <h3 className="text-sm font-bold tracking-tight text-slate-100 line-clamp-1">{item.name}</h3>
                         <p className="text-[10px] font-medium text-slate-500 mt-1 uppercase tracking-tighter">{t.cats[item.category] || item.category}</p>
