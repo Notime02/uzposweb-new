@@ -133,11 +133,23 @@ const App = () => {
                     className="group bg-[#0A0A0A] border border-white/5 rounded-3xl overflow-hidden shadow-xl cursor-pointer active:scale-95 transition-all"
                   >
                     <div className="relative aspect-square overflow-hidden bg-slate-900">
-                      {item.image_url ? (
-                        <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-slate-800"><Utensils size={32}/></div>
-                      )}
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.5 }}
+                        className="w-full h-full"
+                      >
+                        {item.image_url ? (
+                          <img 
+                            src={item.image_url} 
+                            alt={item.name} 
+                            className="w-full h-full object-cover" 
+                            loading={item.category === 'Kebab çeşitleri' ? 'eager' : 'lazy'}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-slate-800"><Utensils size={32}/></div>
+                        )}
+                      </motion.div>
                       <div className={`absolute bottom-2 ${selectedLang === 'AR' ? 'left-2' : 'right-2'} px-3 py-1 bg-black/70 backdrop-blur-md rounded-lg font-black text-[11px] text-blue-400 border border-white/5`}>
                           {item.price.toLocaleString('tr-TR')} ₺
                       </div>
