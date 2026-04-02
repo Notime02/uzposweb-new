@@ -3,6 +3,14 @@ import react from '@vitejs/plugin-react'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  server: {
+    host: true,
+    allowedHosts: ['uzpos.site']
+  },
+  preview: {
+    host: true,
+    allowedHosts: ['uzpos.site']
+  },
   plugins: [react()],
   build: {
     minify: 'terser',
