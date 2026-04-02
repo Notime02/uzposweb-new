@@ -5,7 +5,11 @@ from datetime import datetime
 
 # --- INGREDIENTS & INVENTORY ---
 def get_all_ingredients():
-    return supabase.table("ingredients").select("*").order("name").execute()
+    try:
+        return supabase.table("ingredients").select("*").order("name").execute()
+    except Exception as e:
+        print(f"⚠️ Hata: Ürün listesi çekilemedi: {e}")
+        return type('obj', (object,), {'data': []})
 
 def update_ingredient_stock(ing_id: int, qty_change: float):
     """Updates stock count. qty_change can be positive (invoice) or negative (sale/waste)."""
@@ -49,7 +53,11 @@ def delete_ingredient(ing_id: str):
 
 # --- SUPPLIERS & DEBT ---
 def get_all_suppliers():
-    return supabase.table("suppliers").select("*").order("name").execute()
+    try:
+        return supabase.table("suppliers").select("*").order("name").execute()
+    except Exception as e:
+        print(f"⚠️ Hata: Tedarikçi listesi çekilemedi: {e}")
+        return type('obj', (object,), {'data': []})
 
 def recalculate_supplier_balance(supp_id: str):
     """
@@ -188,7 +196,12 @@ def update_full_invoice(invoice_id: str, invoice_data: Dict[str, Any]):
 
 # --- ACCOUNTS & TRANSACTIONS ---
 def get_all_accounts():
-    return supabase.table("accounts").select("*").order("name").execute()
+    try:
+        # Crucial fix: removed .order("name") because the column doesn't exist.
+        return supabase.table("accounts").select("*").execute()
+    except Exception as e:
+        print(f"⚠️ Hata: Hesap listesi çekilemedi: {e}")
+        return type('obj', (object,), {'data': []})
 
 def add_account(name: str, balance: float = 0.0):
     return supabase.table("accounts").insert({"name": name, "balance": balance}).execute()
@@ -414,27 +427,98 @@ def get_recursive_recipe_cost(m_id: int, visited: Set[int] = None) -> float:
 
 # --- DASHBOARD HELPERS ---
 def get_daily_stats():
-    today = datetime.now().strftime('%Y-%m-%d')
-    p_res = supabase.table("payments").select("*").gte("created_at", f"{today}T00:00:00").execute()
-    df_p = pd.DataFrame(p_res.data) if p_res and p_res.data else pd.DataFrame()
-    cash = df_p[df_p['type'] == 'Nakit']['amount'].sum() if not df_p.empty else 0
-    card = df_p[df_p['type'] == 'Kart']['amount'].sum() if not df_p.empty else 0
-    t_res = supabase.table("tables").select("*").gte("created_at", f"{today}T00:00:00").execute()
-    df_t = pd.DataFrame(t_res.data) if t_res and t_res.data else pd.DataFrame()
-    masa_rev = df_t[df_t['name'].str.contains('masa', case=False, na=False)]['payments'].sum() if not df_t.empty else 0
-    paket_rev = df_t[df_t['name'].str.contains('paket', case=False, na=False)]['payments'].sum() if not df_t.empty else 0
-    paket_count = len(df_t[df_t['name'].str.contains('paket', case=False, na=False)]) if not df_t.empty else 0
-    s_res = supabase.table("suppliers").select("name, balance").order("balance", desc=True).execute()
-    debt_total = sum(s['balance'] for s in s_res.data if s['balance'] > 0) if s_res.data else 0
-    return {
-        "metrics": {
-            "transactions": len(df_p), "cash_payment": cash, "card_payment": card,
-            "total_revenue": cash + card, "table_revenue": masa_rev, "package_revenue": paket_rev,
-            "package_count": paket_count, "total_debt": debt_total
-        },
-        "recent_movements": p_res.data[:10] if p_res.data else [],
-        "debts": [s for s in s_res.data if s['balance'] > 0][:5] if s_res.data else []
-    }
+    """
+    Dashboard summary strictly based on user-defined sources.
+    - Revenue (Nakit, Masa, Paket): Strictly from 'tables' table.
+    - Product Performance (Top/Bottom): Strictly from 'orders.item' analysis.
+    """
+    try:
+        today = datetime.now().strftime('%Y-%m-%d')
+        
+        # 1. Revenue Metrics (Strictly from 'tables')
+        cash, card, masa_rev, paket_rev, paket_count = 0, 0, 0, 0, 0
+        try:
+            t_res = supabase.table("tables").select("*").gte("created_at", f"{today}T00:00:00").execute()
+            if t_res and t_res.data:
+                for t in t_res.data:
+                    val = float(t.get('payments') or 0)
+                    status = str(t.get('status', '')).strip().lower()
+                    name = str(t.get('name', '')).strip().lower()
+                    
+                    # Status based (Cash/Card)
+                    if status == 'nakit': 
+                        cash += val
+                    elif status in ['kart', 'kredi', 'pos', 'banka']: 
+                        card += val
+                    
+                    # Name based (Masa/Paket)
+                    if 'masa' in name: 
+                        masa_rev += val
+                    elif 'paket' in name: 
+                        paket_rev += val
+                        paket_count += 1
+        except Exception as e:
+            print(f"⚠️ Dashboard: Tables tablosu verisi çekilemedi: {e}")
+
+        # 2. Product Analysis (Strictly from 'orders.item' names)
+        top_item = {"name": "Veri Yok", "count": 0}
+        bottom_item = {"name": "Veri Yok", "count": 0}
+        try:
+            # We analyze ALL orders to find top/bottom performers as requested
+            o_res = supabase.table("orders").select("item").execute()
+            if o_res and o_res.data:
+                product_counts = {}
+                for o in o_res.data:
+                    name = o.get('item')
+                    if name:
+                        product_counts[name] = product_counts.get(name, 0) + 1
+                
+                if product_counts:
+                    sorted_items = sorted(product_counts.items(), key=lambda x: x[1], reverse=True)
+                    top_item = {"name": sorted_items[0][0], "count": sorted_items[0][1]}
+                    bottom_item = {"name": sorted_items[-1][0], "count": sorted_items[-1][1]}
+        except Exception as e:
+            print(f"⚠️ Dashboard: Ürün analizi çekilemedi: {e}")
+
+        # 3. Debt Analysis (Suppliers - Remains from suppliers table)
+        debt_total = 0
+        debts_list = []
+        try:
+            s_res = supabase.table("suppliers").select("name, balance").order("balance", desc=True).execute()
+            if s_res and s_res.data:
+                valid_debts = [s for s in s_res.data if float(s.get('balance') or 0) > 0]
+                debt_total = sum(float(s.get('balance') or 0) for s in valid_debts)
+                debts_list = valid_debts[:5]
+        except Exception as e:
+            print(f"⚠️ Dashboard: Borç verisi çekilemedi: {e}")
+
+        return {
+            "metrics": {
+                "transactions": paket_count + (1 if masa_rev > 0 else 0), # Estimated transactions
+                "cash_payment": cash, 
+                "card_payment": card,
+                "total_revenue": cash + card, 
+                "table_revenue": masa_rev, 
+                "package_revenue": paket_rev,
+                "package_count": paket_count, 
+                "total_debt": debt_total,
+                "top_product": top_item, 
+                "bottom_product": bottom_item
+            },
+            "recent_movements": [], # Simplified as orders now handle sales history
+            "debts": debts_list
+        }
+    except Exception as e:
+        print(f"⚠️ KRITIK HATA: Dashboard onarimi basarisiz: {e}")
+        return {
+            "metrics": {
+                "transactions": 0, "cash_payment": 0, "card_payment": 0,
+                "total_revenue": 0, "table_revenue": 0, "package_revenue": 0,
+                "package_count": 0, "total_debt": 0,
+                "top_product": {"name": "Hata", "count": 0}, "bottom_product": {"name": "Hata", "count": 0}
+            },
+            "recent_movements": [], "debts": []
+        }
 
 def get_revenue_chart_data(days=15):
     """
@@ -465,9 +549,8 @@ def calculate_box_to_unit(box_price: float, units_per_box: float, tax_rate: floa
     return {"unit_cost": round(unit_cost, 2), "price_with_tax": round(price_with_tax, 2), "suggested_price": round(suggested_price, 2)}
 
 def get_all_sales():
-    """Fetches sales (orders) for the current day."""
-    today = datetime.now().strftime('%Y-%m-%d')
-    res = supabase.table("orders").select("*, payments(*)").gte("created_at", f"{today}T00:00:00").execute()
+    """Fetches full history of sales (orders) strictly from the 'orders' table."""
+    res = supabase.table("orders").select("*").order("created_at", desc=True).execute()
     return res.data if res and res.data else []
 
 def get_all_invoices():

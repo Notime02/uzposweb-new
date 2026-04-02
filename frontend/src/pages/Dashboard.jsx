@@ -3,7 +3,7 @@ import {
   TrendingUp, CreditCard, Wallet, Banknote, 
   UtensilsCrossed, Bike, Package, AlertCircle,
   ArrowUpRight, ArrowDownRight, Clock, Users, Bell,
-  QrCode
+  QrCode, Award, ZapOff
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, 
@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 import axios from 'axios';
 
-const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || 'https://api.uzpos.site' });
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000' });
 
 const StatCard = ({ icon: Icon, title, value, trend, trendType, color }) => (
   <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group">
@@ -164,6 +164,16 @@ const Dashboard = () => {
           icon={Wallet} title="Toplam Borç" 
           value={`${metrics.total_debt.toLocaleString('tr-TR')} ₺`} 
           trend="%2.0" trendType="up" color="bg-rose-500" 
+        />
+        <StatCard 
+          icon={Award} title="En Çok Satan" 
+          value={metrics.top_product?.name || "Veri Yok"} 
+          trend={`${metrics.top_product?.count || 0} Adet`} trendType="up" color="bg-amber-500" 
+        />
+        <StatCard 
+          icon={ZapOff} title="En Az Satan" 
+          value={metrics.bottom_product?.name || "Veri Yok"} 
+          trend={`${metrics.bottom_product?.count || 0} Adet`} trendType="down" color="bg-slate-500" 
         />
       </div>
 

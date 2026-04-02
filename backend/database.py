@@ -12,16 +12,15 @@ def get_supabase() -> Client:
     key = os.getenv("SUPABASE_KEY")
     
     if not url or not key:
-        print("❌ HATA: SUPABASE_URL veya SUPABASE_KEY .env dosyasında bulunamadı!")
-        print(f"Baktığım yer: {env_path.absolute()}")
+        print("HATA: SUPABASE_URL veya SUPABASE_KEY .env dosyasinda bulunamadi!")
         # Raising an error here will stop the server, which is better than running with broken data
-        raise ValueError("Supabase bağlantı bilgileri eksik. Lütfen .env dosyasını kontrol edin.")
+        raise ValueError("Supabase baglanti bilgileri eksik. Lutfen .env dosyasini kontrol edin.")
     
-    print(f"✅ Supabase istemcisi hazırlandı: {url[:20]}...")
+    print(f"Supabase istemcisi hazirlandi: {url[:20]}...")
     return create_client(url, key)
 
 try:
     supabase = get_supabase()
 except Exception as e:
-    print(f"❌ Supabase Başlatma Hatası: {e}")
+    print(f"Supabase Baslatma Hatasi: {e}")
     supabase = None

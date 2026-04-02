@@ -1,9 +1,10 @@
-from fastapi import FastAPI, HTTPException, Body, Request
+from fastapi import FastAPI, HTTPException, Body, Request, UploadFile, File, Form
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi import Response
+import traceback
 
 from schemas import Ingredient, IngredientUpdate, Supplier, Recipe, Invoice, InvoiceItem
 from logic import (
@@ -12,10 +13,16 @@ from logic import (
     get_all_suppliers, save_full_invoice, get_all_accounts, save_transaction,
     get_all_recipes, delete_recipe, get_all_sales, get_all_invoices,
     update_ingredient, delete_ingredient, create_ingredient, update_supplier, delete_supplier, add_supplier,
-    update_ingredient, delete_ingredient, create_ingredient, update_supplier, delete_supplier, add_supplier,
     get_invoice_full_data, update_full_invoice, delete_invoice, update_menu_item_recipe,
-    get_qr_menu_items
+    get_qr_menu_items, get_account_targets, add_account, create_menu_item_recipe, update_all_menu_costs
 )
+try:
+    from modules.invoices import process_full_invoice
+    AI_INVOICE_SUPPORT = True
+except ImportError as e:
+    AI_INVOICE_SUPPORT = False
+    print(f"⚠️ UYARI: Yeni Gemini SDK ('google-genai') yüklü değil. Hata: {e}")
+    print("Mevcut özellikleri kullanmaya devam edebilirsiniz. Fatura tarama için: 'pip install google-genai thefuzz'")
 from database import supabase
 from typing import List, Dict, Any
 
@@ -296,6 +303,29 @@ def fetch_invoice_details(invoice_id: str):
     if not data:
         raise HTTPException(status_code=404, detail="Invoice not found")
     return data
+
+@app.post("/process-invoice")
+async def api_process_invoice(file: UploadFile = File(...), supplier_id: str = Form(None)):
+    try:
+        if not AI_INVOICE_SUPPORT:
+            return {"error": "AI Invoice processing is not supported."}
+        
+        content = await file.read()
+        res = process_full_invoice(content, supplier_id)
+        
+        if "error" in res:
+            # Note: We still return this as 500 to signal error to frontend, 
+            # but now we can see WHY in the terminal.
+            print(f"🔴 MANTIKSAL HATA: {res['error']}")
+            raise HTTPException(status_code=500, detail=res["error"])
+            
+        return res
+        
+    except Exception as e:
+        print("--- 🔴 KRİTİK HATA DETAYI BAŞLIYOR ---")
+        print(traceback.format_exc()) 
+        print("--- 🔴 KRİTİK HATA DETAYI BİTTİ ---")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/invoices")
 def create_invoice(invoice: Dict[str, Any] = Body(...)):
